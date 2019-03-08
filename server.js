@@ -1,18 +1,35 @@
-var express = require('express');
-var app = express();
+var app = require('express')();
 var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
-app.use(express.static('dist'));
+io.on('connection', function(socket){
+  console.log('a user connected');
+  socket.on('disconnect', function(){
+    console.log('user disconnected');
+  });
+});
 
-app.use('/dist', express.static('dist'));
+io.on('connection', function(socket){
+  socket.on('chat message', function(msg){
+    console.log('message: ' + msg);
+  });
+});
 
+io.emit('some event', { for: 'everyone' });
 
-//identify unused port between 1520 and 1540
-var port = 1541;
+io.on('connection', function(socket){
+  socket.broadcast.emit('hi');
+});
+io.on('connection', function(socket){
+  socket.on('chat message', function(msg){
+    io.emit('chat message', msg);
+  });
+});
+var port = 1539;
 http.listen(port, function(){
-  console.log('listening on https://seattleacademy.software/'+port);
+  console.log('listening on:',port);
 });
